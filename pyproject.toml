@@ -1,0 +1,15 @@
+[project]
+
+name = "oceandiff"
+version = "0.1.0"
+description = "testing and diagnosing differences in NetCDF outputs"
+authors = [
+    { name="Olivia Smedley", email="olivia.smedley@metoffice.gov.uk" }
+]
+requires-python = ">=3.11,<4.0"  # <-- Python version constraint
+dependencies = [
+    "xarray>=2023.9",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "imageio>=2.31"
+]

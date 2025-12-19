@@ -6,7 +6,7 @@ oceandiff is a Python package for testing and diagnosing differences in NetCDF o
 
 - Compare metadata and provide human-readable differences.
 
-- Generate diagnostic visualizations, including static plots and GIF animations, to illustrate spatial, depth, or temporal differences.
+- Generate diagnostic visualisations, including static plots and GIF animations, to illustrate spatial, depth, or temporal differences.
 
 - Integrate easily into CI pipelines or post-processing tasks without modifying existing workflows.
 
