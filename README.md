@@ -73,6 +73,18 @@ Include metadata comparison:
 oceandiff run_a.nc run_b.nc --metadata
 ```
 
+Create a static map of differences:
+
+```bash
+oceandiff run_a.nc run_b.nc --plot --output-dir diff_outputs
+```
+
+Create a depth animation GIF:
+
+```bash
+oceandiff run_a.nc run_b.nc --animate --output-dir diff_outputs
+```
+
 Compare two directories (matches files by normalized relative filename, including variable token such as TEM/SAL/BED):
 
 ```bash
@@ -112,4 +124,46 @@ This will skip interpolation and help diagnose grid differences. The CLI will pr
 - The filename is used as a category hint by default, then the comparison variable is resolved from the NetCDF contents. Override with `--var1` / `--var2` if needed.
 - Directory mode is implemented via `--dir1` and `--dir2`; files are compared pairwise by normalized relative path. This supports `dmYYYYMMDD` vs `ddYYYYMMDD` style filename differences while keeping variables (for example TEM/SAL/BED) distinct.
 - `--no-interp` flag disables grid interpolation and requires exact grid match for debugging coordinate issues.
-- `--plot` and `--animate` CLI flags are present but plotting/animation functions are not currently wired, so avoid these flags for now.
+- `--plot` and `--animate` are available. Use `--output-dir` to save generated images/GIFs.
+
+## Team quick start workflows
+
+### 1. Local file-to-file QA
+
+Run a quick numerical check first, then include metadata if needed:
+
+```bash
+oceandiff baseline.nc candidate.nc
+oceandiff baseline.nc candidate.nc --metadata
+```
+
+### 2. Batch QA across directories
+
+Use directory mode for operational output comparisons:
+
+```bash
+oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --recursive
+```
+
+Add `--strict-pairs` in validation gates where missing files should fail the run:
+
+```bash
+oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --recursive --strict-pairs
+```
+
+### 3. Diagnose coordinate/grid issues
+
+If interpolation hides a mismatch, run with `--no-interp`:
+
+```bash
+oceandiff baseline.nc candidate.nc --no-interp
+```
+
+### 4. Produce review artefacts
+
+Generate visual outputs for team reviews:
+
+```bash
+oceandiff baseline.nc candidate.nc --plot --output-dir review_outputs
+oceandiff baseline.nc candidate.nc --animate --output-dir review_outputs
+```
