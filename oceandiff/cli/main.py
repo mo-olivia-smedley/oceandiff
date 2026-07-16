@@ -5,8 +5,6 @@ from pathlib import Path
 from oceandiff.diff.diff import diff_variable
 from oceandiff.diff.stats import diff_stats
 from oceandiff.diff.metadata_diff import diff_global_metadata, diff_variable_metadata
-# from oceandiff.plot.plot import plot_map
-# from oceandiff.plot.animate import animate_depths
 
 
 def _iter_nc_files(directory: str, pattern: str, recursive: bool) -> dict[str, Path]:
@@ -45,11 +43,13 @@ def _infer_var_from_filename(path: str, filename_var_regex: str | None = None) -
 def _normalize_filename_for_pairing(filename: str) -> str:
     """Normalize filename tokens so dm/dd-style prefixes can still pair.
 
-    Example: dm20260704 and dd20260704 both normalize to d20260704.
+    Examples:
+    - dm20260704 and dd20260704 both normalize to d20260704.
+    - hd20260704 and hi20260704 both normalize to h20260704.
     """
     path = Path(filename)
     tokens = path.stem.split("_")
-    normalized_tokens = [re.sub(r"^d[a-zA-Z](\d+)$", r"d\1", token) for token in tokens]
+    normalized_tokens = [re.sub(r"^([a-zA-Z])[a-zA-Z](\d+)$", r"\1\2", token) for token in tokens]
     return "_".join(normalized_tokens) + path.suffix
 
 
@@ -136,10 +136,16 @@ def _run_single_compare(args, file1: str, file2: str, var1: str, var2: str | Non
 
     diff = diff_variable(file1, file2, var1, var2, args.time_index, args.depth, no_interp=args.no_interp)
     stats = diff_stats(diff)
+    var2_name = var2 or var1
+    title_prefix = f"{var1} ({Path(file1).name}) - {var2_name} ({Path(file2).name})"
 
     print("=== Numerical difference statistics ===")
     for k, v in stats.items():
         print(f"{k}: {v:.6g}")
+
+    # Open dataset to access spatial coordinates (e.g., nav_lat/nav_lon)
+    xr = importlib.import_module("xarray")
+    ds1 = xr.open_dataset(file1)
 
     # --- optional plotting ---
     if args.plot:
@@ -148,17 +154,17 @@ def _run_single_compare(args, file1: str, file2: str, var1: str, var2: str | Non
             plot_map = getattr(importlib.import_module("oceandiff.plot.plot"), "plot_map")
         except Exception as exc:
             raise RuntimeError("Plotting is unavailable in the current installation") from exc
-        plot_map(diff, title=f"{var1} - {var2 or var1}")
-        plt.show()
+        plot_map(diff, title=title_prefix, output_dir=args.output_dir, dataset=ds1)
+        if not args.output_dir:
+            plt.show()
 
     if args.animate:
         try:
             animate_depths = getattr(importlib.import_module("oceandiff.plot.animate"), "animate_depths")
         except Exception as exc:
             raise RuntimeError("Animation is unavailable in the current installation") from exc
-        output = args.output_gif or f"{var1}_diff.gif"
-        animate_depths(diff, output=output)
-        print(f"Saved animation to {output}")
+        output = args.output_gif or f"{var1}_minus_{var2_name}_diff.gif"
+        animate_depths(diff, output=output, output_dir=args.output_dir, title_prefix=title_prefix, dataset=ds1)
 
     # --- metadata comparison ---
     if args.metadata:
@@ -214,7 +220,8 @@ def main():
     parser.add_argument("--plot", action="store_true", help="Plot surface / depth slice")
     parser.add_argument("--animate", action="store_true", help="Animate depth differences")
     parser.add_argument("--metadata", action="store_true", help="Compare metadata")
-    parser.add_argument("--output-gif", help="Path to save GIF (if animate)")
+    parser.add_argument("--output-dir", help="Directory to save plots and animations")
+    parser.add_argument("--output-gif", help="[Deprecated] Use --output-dir instead")
     parser.add_argument("--no-interp", action="store_true", help="Skip interpolation; require exact grid match")
     parser.add_argument("--dir1", help="First directory of NetCDF files")
     parser.add_argument("--dir2", help="Second directory of NetCDF files")
