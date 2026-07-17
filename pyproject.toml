@@ -18,6 +18,11 @@ dependencies = [
 test = [
     "pytest>=8.0"
 ]
+dev = [
+    "black>=23.0",
+    "pylint>=3.0",
+    "pytest>=8.0"
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]  # Allow pytest to find oceandiff from repo root
