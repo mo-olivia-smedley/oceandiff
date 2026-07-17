@@ -9,43 +9,57 @@ import xarray as xr
 import numpy as np
 
 
-def _coords_close(coords1: dict, coords2: dict, rtol: float = 1e-5, atol: float = 1e-8) -> tuple[bool, str]:
+def _coords_close(
+    coords1: dict, coords2: dict, rtol: float = 1e-5, atol: float = 1e-8
+) -> tuple[bool, str]:
     """Check if two coordinate dictionaries are close within tolerance.
-    
+
     Returns (match: bool, reason: str).
-    
+
     For datetime64 coordinates, converts to int64 (nanoseconds) and uses numeric tolerance.
     """
     if set(coords1.keys()) != set(coords2.keys()):
-        return False, f"coordinate names differ: {set(coords1.keys())} vs {set(coords2.keys())}"
-    
+        return (
+            False,
+            f"coordinate names differ: {set(coords1.keys())} vs {set(coords2.keys())}",
+        )
+
     for name in coords1:
         c1 = coords1[name]
         c2 = coords2[name]
-        
+
         if c1.shape != c2.shape:
             return False, f"coordinate {name} shape differs: {c1.shape} vs {c2.shape}"
-        
+
         # For numeric coordinates, use allclose with tolerance
         if np.issubdtype(c1.dtype, np.number) and np.issubdtype(c2.dtype, np.number):
-            if not np.allclose(c1.values, c2.values, rtol=rtol, atol=atol, equal_nan=True):
+            if not np.allclose(
+                c1.values, c2.values, rtol=rtol, atol=atol, equal_nan=True
+            ):
                 max_diff = float(np.nanmax(np.abs(c1.values - c2.values)))
                 return False, f"coordinate {name} values differ (max diff: {max_diff})"
         # For datetime64 coordinates, convert to int64 and compare numerically
-        elif np.issubdtype(c1.dtype, np.datetime64) and np.issubdtype(c2.dtype, np.datetime64):
+        elif np.issubdtype(c1.dtype, np.datetime64) and np.issubdtype(
+            c2.dtype, np.datetime64
+        ):
             try:
-                c1_int = c1.values.astype('int64')
-                c2_int = c2.values.astype('int64')
-                if not np.allclose(c1_int, c2_int, rtol=rtol, atol=atol, equal_nan=True):
+                c1_int = c1.values.astype("int64")
+                c2_int = c2.values.astype("int64")
+                if not np.allclose(
+                    c1_int, c2_int, rtol=rtol, atol=atol, equal_nan=True
+                ):
                     max_diff = int(np.nanmax(np.abs(c1_int - c2_int)))
-                    return False, f"coordinate {name} (datetime) values differ (max diff: {max_diff} ns)"
+                    return (
+                        False,
+                        f"coordinate {name} (datetime) values differ (max diff: {max_diff} ns)",
+                    )
             except Exception as e:
                 return False, f"coordinate {name} (datetime) comparison failed: {e}"
         else:
             # For non-numeric (e.g., string) coordinates, require exact match
             if not np.array_equal(c1.values, c2.values, equal_nan=True):
                 return False, f"coordinate {name} values differ (non-numeric)"
-    
+
     return True, "all coordinates match"
 
 
@@ -64,7 +78,7 @@ def diff_variable(
     var2: str | None = None,
     time: int | None = None,
     depth: int | None = None,
-    no_interp: bool = False
+    no_interp: bool = False,
 ) -> xr.DataArray:
     """
     Compute the difference between two variables in NetCDF files.
@@ -108,22 +122,35 @@ def diff_variable(
     for coord_name in da1.dims:
         if coord_name in da1.coords:
             coord = da1.coords[coord_name]
-            c_min = float(coord.values.min()) if coord.size > 0 else float('nan')
-            c_max = float(coord.values.max()) if coord.size > 0 else float('nan')
-            print(f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]")
+            c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
+            c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
+            print(
+                f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]"
+            )
 
     print(f"File2 {var2}: dims={da2.dims}, shape={da2.shape}")
     for coord_name in da2.dims:
         if coord_name in da2.coords:
             coord = da2.coords[coord_name]
-            c_min = float(coord.values.min()) if coord.size > 0 else float('nan')
-            c_max = float(coord.values.max()) if coord.size > 0 else float('nan')
-            print(f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]")
+            c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
+            c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
+            print(
+                f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]"
+            )
 
     # Apply time and depth slicing BEFORE interpolation/subtraction
     # This ensures both variables are at the same time/depth index
     time_candidates = ["time", "time_counter", "t", "T"]
-    depth_candidates = ["depth", "deptht", "depthu", "depthv", "depthw", "z", "lev", "level"]
+    depth_candidates = [
+        "depth",
+        "deptht",
+        "depthu",
+        "depthv",
+        "depthw",
+        "z",
+        "lev",
+        "level",
+    ]
 
     if time is not None:
         time_dim = _find_dim(da1.dims, time_candidates)
@@ -165,4 +192,3 @@ def diff_variable(
     diff.name = f"{var1}_minus_{var2}"
 
     return diff
-

@@ -34,10 +34,7 @@ def test_diff_variable_interpolates_when_grids_differ(tmp_path) -> None:
     b = xx2 + yy2
 
     # Create dataset on grid 2
-    ds2 = xr.Dataset(
-        {"thetao": (("y", "x"), b)},
-        coords={"x": x2, "y": y}
-    )
+    ds2 = xr.Dataset({"thetao": (("y", "x"), b)}, coords={"x": x2, "y": y})
 
     # Create data on grid 1 (coarse) using same linear function
     xx1, yy1 = np.meshgrid(x1, y)

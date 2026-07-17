@@ -7,8 +7,12 @@ from conftest import make_2d_dataset, write_dataset
 
 
 def test_diff_global_metadata_reports_changes_and_missing_keys(tmp_path) -> None:
-    ds1 = make_2d_dataset("thetao", np.zeros((2, 3)), attrs={"title": "run_a", "source": "model"})
-    ds2 = make_2d_dataset("thetao", np.zeros((2, 3)), attrs={"title": "run_b", "history": "new"})
+    ds1 = make_2d_dataset(
+        "thetao", np.zeros((2, 3)), attrs={"title": "run_a", "source": "model"}
+    )
+    ds2 = make_2d_dataset(
+        "thetao", np.zeros((2, 3)), attrs={"title": "run_b", "history": "new"}
+    )
 
     f1 = write_dataset(tmp_path, "a.nc", ds1)
     f2 = write_dataset(tmp_path, "b.nc", ds2)

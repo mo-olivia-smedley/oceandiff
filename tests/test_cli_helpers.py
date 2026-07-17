@@ -25,8 +25,12 @@ def test_infer_var_from_filename_with_custom_regex() -> None:
 
 
 def test_normalize_filename_for_pairing_merges_dm_and_dd() -> None:
-    assert _normalize_filename_for_pairing("sample_dm20260704.nc") == "sample_d20260704.nc"
-    assert _normalize_filename_for_pairing("sample_dd20260704.nc") == "sample_d20260704.nc"
+    assert (
+        _normalize_filename_for_pairing("sample_dm20260704.nc") == "sample_d20260704.nc"
+    )
+    assert (
+        _normalize_filename_for_pairing("sample_dd20260704.nc") == "sample_d20260704.nc"
+    )
 
 
 def test_build_pair_map_raises_on_ambiguous_normalized_key(tmp_path) -> None:
@@ -52,7 +56,9 @@ def test_resolve_comparison_vars_uses_explicit_override(tmp_path) -> None:
     f1 = write_dataset(tmp_path, "a.nc", ds1)
     f2 = write_dataset(tmp_path, "b.nc", ds2)
 
-    pairs, reason = _resolve_comparison_vars(f1, f2, category_hint=None, explicit_var1="thetao", explicit_var2="so")
+    pairs, reason = _resolve_comparison_vars(
+        f1, f2, category_hint=None, explicit_var1="thetao", explicit_var2="so"
+    )
 
     assert pairs == [("thetao", "so")]
     assert reason == "explicit variable thetao"
@@ -70,7 +76,9 @@ def test_resolve_comparison_vars_uses_category_hint_when_available(tmp_path) -> 
     f1 = write_dataset(tmp_path, "a.nc", ds1)
     f2 = write_dataset(tmp_path, "b.nc", ds2)
 
-    pairs, reason = _resolve_comparison_vars(f1, f2, category_hint="CUR", explicit_var1=None, explicit_var2=None)
+    pairs, reason = _resolve_comparison_vars(
+        f1, f2, category_hint="CUR", explicit_var1=None, explicit_var2=None
+    )
 
     assert pairs == [("uo", "uo"), ("vo", "vo")]
     assert reason == "category CUR"
@@ -81,4 +89,6 @@ def test_resolve_comparison_vars_raises_when_no_common_variables(tmp_path) -> No
     f2 = write_dataset(tmp_path, "b.nc", make_2d_dataset("so", np.zeros((2, 3))))
 
     with pytest.raises(ValueError, match="No common data variables"):
-        _resolve_comparison_vars(f1, f2, category_hint=None, explicit_var1=None, explicit_var2=None)
+        _resolve_comparison_vars(
+            f1, f2, category_hint=None, explicit_var1=None, explicit_var2=None
+        )

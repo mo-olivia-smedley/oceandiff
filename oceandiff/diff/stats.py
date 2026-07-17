@@ -35,7 +35,7 @@ def diff_stats(diff: xr.DataArray) -> dict:
         "min": float(data.min()),
         "max": float(data.max()),
         "mean": float(data.mean()),
-        "rms": float(np.sqrt((data ** 2).mean())),
+        "rms": float(np.sqrt((data**2).mean())),
     }
 
     return stats
