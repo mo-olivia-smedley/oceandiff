@@ -164,6 +164,7 @@ def _run_single_compare(
 
     if args.output_gif:
         import warnings
+
         warnings.warn(
             "--output-gif is deprecated; use --output-dir instead.",
             DeprecationWarning,

@@ -141,7 +141,11 @@ def _compute_diff(
             c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
             c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
             logger.debug(
-                "  %s: size=%d, range=[%.6g, %.6g]", coord_name, coord.size, c_min, c_max
+                "  %s: size=%d, range=[%.6g, %.6g]",
+                coord_name,
+                coord.size,
+                c_min,
+                c_max,
             )
 
     logger.debug("File2 %s: dims=%s, shape=%s", var2, da2.dims, da2.shape)
@@ -151,7 +155,11 @@ def _compute_diff(
             c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
             c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
             logger.debug(
-                "  %s: size=%d, range=[%.6g, %.6g]", coord_name, coord.size, c_min, c_max
+                "  %s: size=%d, range=[%.6g, %.6g]",
+                coord_name,
+                coord.size,
+                c_min,
+                c_max,
             )
 
     # Apply time and depth slicing BEFORE interpolation/subtraction
