@@ -27,7 +27,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Check formatting with black
-        run: black --check oceandiff
+        run: black --check --target-version py311 oceandiff tests
 
       - name: Lint with pylint
         run: pylint oceandiff --disable=C0111,C0103,R0913
