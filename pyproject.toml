@@ -14,5 +14,14 @@ dependencies = [
     "imageio>=2.31"
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0"
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]  # Allow pytest to find oceandiff from repo root
+testpaths = ["tests"]
+
 [project.scripts]
 oceandiff = "oceandiff.cli.main:main"
