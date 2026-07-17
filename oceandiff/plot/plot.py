@@ -211,7 +211,8 @@ def plot_map(
     )
 
     if title:
-        ax.set_title(title)
+        # Split at '\n' so each file label sits on its own line
+        ax.set_title(title, wrap=True)
 
     if output_dir:
         output_path = Path(output_dir)

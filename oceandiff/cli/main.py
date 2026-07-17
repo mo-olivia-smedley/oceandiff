@@ -156,15 +156,22 @@ def _run_single_compare(
     )
     stats = diff_stats(diff)
     var2_name = var2 or var1
-    title_prefix = f"{var1} ({Path(file1).name}) - {var2_name} ({Path(file2).name})"
+    title_prefix = f"{var1} ({Path(file1).name})\n- {var2_name} ({Path(file2).name})"
 
     print("=== Numerical difference statistics ===")
     for k, v in stats.items():
         print(f"{k}: {v:.6g}")
 
+    if args.output_gif:
+        import warnings
+        warnings.warn(
+            "--output-gif is deprecated; use --output-dir instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     # Open dataset to access spatial coordinates (e.g., nav_lat/nav_lon)
     xr = importlib.import_module("xarray")
-    ds1 = xr.open_dataset(file1)
 
     # --- optional plotting ---
     if args.plot:
@@ -177,7 +184,8 @@ def _run_single_compare(
             raise RuntimeError(
                 "Plotting is unavailable in the current installation"
             ) from exc
-        plot_map(diff, title=title_prefix, output_dir=args.output_dir, dataset=ds1)
+        with xr.open_dataset(file1) as ds1:
+            plot_map(diff, title=title_prefix, output_dir=args.output_dir, dataset=ds1)
         if not args.output_dir:
             plt.show()
 
@@ -191,13 +199,14 @@ def _run_single_compare(
                 "Animation is unavailable in the current installation"
             ) from exc
         output = args.output_gif or f"{var1}_minus_{var2_name}_diff.gif"
-        animate_depths(
-            diff,
-            output=output,
-            output_dir=args.output_dir,
-            title_prefix=title_prefix,
-            dataset=ds1,
-        )
+        with xr.open_dataset(file1) as ds1:
+            animate_depths(
+                diff,
+                output=output,
+                output_dir=args.output_dir,
+                title_prefix=title_prefix,
+                dataset=ds1,
+            )
 
     # --- metadata comparison ---
     if args.metadata:

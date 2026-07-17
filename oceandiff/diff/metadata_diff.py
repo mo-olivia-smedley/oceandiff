@@ -34,11 +34,8 @@ def diff_global_metadata(file1: str, file2: str) -> dict:
     """
     Compare global attributes between two NetCDF files.
     """
-
-    ds1 = xr.open_dataset(file1)
-    ds2 = xr.open_dataset(file2)
-
-    return _diff_dict(ds1.attrs, ds2.attrs)
+    with xr.open_dataset(file1) as ds1, xr.open_dataset(file2) as ds2:
+        return _diff_dict(ds1.attrs, ds2.attrs)
 
 
 def diff_variable_metadata(
@@ -62,21 +59,19 @@ def diff_variable_metadata(
         Nested dictionary of attribute differences.
     """
 
-    ds1 = xr.open_dataset(file1)
-    ds2 = xr.open_dataset(file2)
+    with xr.open_dataset(file1) as ds1, xr.open_dataset(file2) as ds2:
+        if variables is None:
+            variables = sorted(set(ds1.data_vars) & set(ds2.data_vars))
 
-    if variables is None:
-        variables = sorted(set(ds1.data_vars) & set(ds2.data_vars))
+        diffs = {}
 
-    diffs = {}
+        for var in variables:
+            attrs1 = ds1[var].attrs
+            attrs2 = ds2[var].attrs
 
-    for var in variables:
-        attrs1 = ds1[var].attrs
-        attrs2 = ds2[var].attrs
+            var_diffs = _diff_dict(attrs1, attrs2)
 
-        var_diffs = _diff_dict(attrs1, attrs2)
-
-        if var_diffs:
-            diffs[var] = var_diffs
+            if var_diffs:
+                diffs[var] = var_diffs
 
     return diffs

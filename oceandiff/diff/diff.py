@@ -5,8 +5,11 @@ Ocean-specific difference computation between two NetCDF files.
 """
 
 from __future__ import annotations
+import logging
 import xarray as xr
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def _coords_close(
@@ -110,32 +113,45 @@ def diff_variable(
         var2 = var1
 
     # Open datasets
-    ds1 = xr.open_dataset(file1)
-    ds2 = xr.open_dataset(file2)
+    with xr.open_dataset(file1) as ds1, xr.open_dataset(file2) as ds2:
+        result = _compute_diff(ds1, ds2, var1, var2, time, depth, no_interp)
+        # Load data into memory before datasets are closed
+        result.load()
+    return result
 
+
+def _compute_diff(
+    ds1: xr.Dataset,
+    ds2: xr.Dataset,
+    var1: str,
+    var2: str,
+    time: int | None,
+    depth: int | None,
+    no_interp: bool,
+) -> xr.DataArray:
     # Extract variables
     da1 = ds1[var1]
     da2 = ds2[var2]
 
-    # Diagnostic: print coordinate info before interpolation
-    print(f"File1 {var1}: dims={da1.dims}, shape={da1.shape}")
+    # Diagnostic: log coordinate info before interpolation
+    logger.debug("File1 %s: dims=%s, shape=%s", var1, da1.dims, da1.shape)
     for coord_name in da1.dims:
         if coord_name in da1.coords:
             coord = da1.coords[coord_name]
             c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
             c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
-            print(
-                f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]"
+            logger.debug(
+                "  %s: size=%d, range=[%.6g, %.6g]", coord_name, coord.size, c_min, c_max
             )
 
-    print(f"File2 {var2}: dims={da2.dims}, shape={da2.shape}")
+    logger.debug("File2 %s: dims=%s, shape=%s", var2, da2.dims, da2.shape)
     for coord_name in da2.dims:
         if coord_name in da2.coords:
             coord = da2.coords[coord_name]
             c_min = float(coord.values.min()) if coord.size > 0 else float("nan")
             c_max = float(coord.values.max()) if coord.size > 0 else float("nan")
-            print(
-                f"  {coord_name}: size={coord.size}, range=[{c_min:.6g}, {c_max:.6g}]"
+            logger.debug(
+                "  %s: size=%d, range=[%.6g, %.6g]", coord_name, coord.size, c_min, c_max
             )
 
     # Apply time and depth slicing BEFORE interpolation/subtraction
@@ -173,7 +189,7 @@ def diff_variable(
     if not exact_match:
         lenient_match, reason = _coords_close(da1.coords, da2.coords)
         if lenient_match:
-            print(f"Grids match (lenient): {reason}; no interpolation needed.")
+            logger.debug("Grids match (lenient): %s; no interpolation needed.", reason)
         else:
             if no_interp:
                 raise ValueError(
@@ -182,10 +198,10 @@ def diff_variable(
                     f"File1 {var1}: dims={da1.dims}, shape={da1.shape}\n"
                     f"File2 {var2}: dims={da2.dims}, shape={da2.shape}"
                 )
-            print(f"Grids differ ({reason}); attempting interpolation...")
+            logger.info("Grids differ (%s); attempting interpolation...", reason)
             da2 = da2.interp_like(da1)
     else:
-        print("Grids match (exact); no interpolation needed.")
+        logger.debug("Grids match (exact); no interpolation needed.")
 
     # Subtract
     diff = da1 - da2
