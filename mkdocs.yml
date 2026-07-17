@@ -1,0 +1,52 @@
+site_name: oceandiff
+site_description: Testing and diagnosing differences in NetCDF outputs from oceanographic workflows
+site_url: https://olivia.smedley.github.io/oceandiff
+repo_url: https://github.com/olivia.smedley/oceandiff
+repo_name: oceandiff
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            docstring_style: numpy
+            members_order: source
+
+nav:
+  - Home: index.md
+  - CLI Reference: cli.md
+  - API Reference: api.md
+  - Contributing: contributing.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - admonition
+  - toc:
+      permalink: true
