@@ -22,7 +22,8 @@ dev = [
     "black>=23.0",
     "pylint>=3.0",
     "pytest>=8.0",
-    "netCDF4>=1.6"
+    "netCDF4>=1.6",
+    "scipy>=1.11"
 ]
 
 [tool.pytest.ini_options]
