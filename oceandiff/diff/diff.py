@@ -12,6 +12,79 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 
+def _check_time_variables(ds1: xr.Dataset, ds2: xr.Dataset) -> None:
+    """
+    Check for differences in time and time_bounds variables across files.
+    Logs warnings if variables exist in both files but differ.
+    Checks both coordinates and data variables.
+    """
+    time_vars = ["time", "time_bounds"]
+
+    for var in time_vars:
+        # Check both coords and data_vars
+        has_v1 = var in ds1.coords or var in ds1.data_vars
+        has_v2 = var in ds2.coords or var in ds2.data_vars
+        
+        if has_v1 and has_v2:
+            v1 = ds1[var]
+            v2 = ds2[var]
+
+            # Check shape
+            if v1.shape != v2.shape:
+                logger.warning(
+                    "Variable '%s' shape differs: %s vs %s",
+                    var,
+                    v1.shape,
+                    v2.shape,
+                )
+                continue
+
+            # Check data values with strict tolerance for time
+            try:
+                # Use stricter/exact comparison for time variables
+                if np.issubdtype(v1.dtype, np.datetime64) and np.issubdtype(
+                    v2.dtype, np.datetime64
+                ):
+                    # For datetime, require exact match
+                    if not np.array_equal(v1.values, v2.values, equal_nan=True):
+                        logger.warning(
+                            "Variable '%s' datetime values differ:\n"
+                            "  File1: %s\n"
+                            "  File2: %s",
+                            var,
+                            v1.values,
+                            v2.values,
+                        )
+                else:
+                    # For numeric time, use smaller tolerance
+                    if not np.allclose(
+                        v1.values, v2.values, rtol=1e-9, atol=1e-12, equal_nan=True
+                    ):
+                        max_diff = float(np.nanmax(np.abs(v1.values - v2.values)))
+                        logger.warning(
+                            "Variable '%s' values differ (max diff: %s):\n"
+                            "  File1: %s\n"
+                            "  File2: %s",
+                            var,
+                            max_diff,
+                            v1.values,
+                            v2.values,
+                        )
+            except (TypeError, ValueError) as e:
+                logger.warning(
+                    "Variable '%s' values could not be compared: %s", var, e
+                )
+
+            # Check attributes
+            if v1.attrs != v2.attrs:
+                logger.warning(
+                    "Variable '%s' attributes differ: %s vs %s",
+                    var,
+                    v1.attrs,
+                    v2.attrs,
+                )
+
+
 def _coords_close(
     coords1: dict, coords2: dict, rtol: float = 1e-5, atol: float = 1e-8
 ) -> tuple[bool, str]:
@@ -129,6 +202,9 @@ def _compute_diff(
     depth: int | None,
     no_interp: bool,
 ) -> xr.DataArray:
+    # Check time and time_bounds variables first
+    _check_time_variables(ds1, ds2)
+
     # Extract variables
     da1 = ds1[var1]
     da2 = ds2[var2]
