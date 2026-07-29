@@ -24,7 +24,7 @@ def _check_time_variables(ds1: xr.Dataset, ds2: xr.Dataset) -> None:
         # Check both coords and data_vars
         has_v1 = var in ds1.coords or var in ds1.data_vars
         has_v2 = var in ds2.coords or var in ds2.data_vars
-        
+
         if has_v1 and has_v2:
             v1 = ds1[var]
             v2 = ds2[var]
@@ -71,9 +71,7 @@ def _check_time_variables(ds1: xr.Dataset, ds2: xr.Dataset) -> None:
                             v2.values,
                         )
             except (TypeError, ValueError) as e:
-                logger.warning(
-                    "Variable '%s' values could not be compared: %s", var, e
-                )
+                logger.warning("Variable '%s' values could not be compared: %s", var, e)
 
             # Check attributes
             if v1.attrs != v2.attrs:
