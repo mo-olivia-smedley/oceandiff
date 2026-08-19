@@ -63,6 +63,7 @@ oceandiff --dir1 DIR1 --dir2 DIR2 [OPTIONS]
 | `--pattern GLOB` | File glob pattern within directories (default: `*.nc`). |
 | `--recursive` | Search directories recursively. |
 | `--strict-pairs` | Fail if files exist in one directory but not the other. |
+| `--filename-match` | Match files by exact filename instead of normalized pairing. Disables `dm`/`dd`-style prefix normalization. |
 
 ---
 
@@ -117,6 +118,16 @@ oceandiff --dir1 baseline_outputs --dir2 candidate_outputs
 oceandiff --dir1 baseline_outputs --dir2 candidate_outputs \
           --recursive --strict-pairs
 ```
+
+### Directory mode — exact filename matching
+
+When your files have identical filenames in both directories (no `dm`/`dd` prefix differences), use `--filename-match` for a straightforward exact match:
+
+```bash
+oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --filename-match
+```
+
+Only files with the same relative path in both directories will be paired.
 
 ### Custom filename regex
 

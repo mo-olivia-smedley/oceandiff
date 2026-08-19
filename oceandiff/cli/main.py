@@ -63,21 +63,31 @@ def _build_pair_map(
     filename_var_regex: str | None,
     parser: argparse.ArgumentParser,
     side_name: str,
+    filename_match: bool = False,
 ) -> dict[str, tuple[Path, str | None, str]]:
     """Build pair-key map with collision detection.
 
     Returns mapping: normalized relative key -> (path, inferred_var, original_relpath)
+    
+    If filename_match is True, uses exact filename matching instead of normalized pairing.
     """
     mapping: dict[str, tuple[Path, str | None, str]] = {}
 
     for relpath, abs_path in files.items():
         rel = Path(relpath)
-        normalized_name = _normalize_filename_for_pairing(rel.name)
-        key = (
-            str(rel.parent / normalized_name)
-            if str(rel.parent) != "."
-            else normalized_name
-        )
+        
+        if filename_match:
+            # Use exact filename (full relative path) as key
+            key = relpath
+        else:
+            # Normalize for dm/dd-style prefix matching
+            normalized_name = _normalize_filename_for_pairing(rel.name)
+            key = (
+                str(rel.parent / normalized_name)
+                if str(rel.parent) != "."
+                else normalized_name
+            )
+        
         inferred_var = _infer_var_from_filename(str(abs_path), filename_var_regex)
 
         if key in mapping:
@@ -308,6 +318,11 @@ def main():
         "--filename-var-regex",
         help="Regex to extract variable from filename with named capture group 'var'",
     )
+    parser.add_argument(
+        "--filename-match",
+        action="store_true",
+        help="Match files by exact filename (no normalization of dm/dd prefixes)",
+    )
 
     args = parser.parse_args()
 
@@ -329,10 +344,10 @@ def main():
         files2 = _iter_nc_files(args.dir2, args.pattern, args.recursive)
 
         pair_map1 = _build_pair_map(
-            files1, args.dir1, args.filename_var_regex, parser, "--dir1"
+            files1, args.dir1, args.filename_var_regex, parser, "--dir1", args.filename_match
         )
         pair_map2 = _build_pair_map(
-            files2, args.dir2, args.filename_var_regex, parser, "--dir2"
+            files2, args.dir2, args.filename_var_regex, parser, "--dir2", args.filename_match
         )
 
         only1 = sorted(set(pair_map1) - set(pair_map2))

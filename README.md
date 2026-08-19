@@ -91,6 +91,12 @@ Compare two directories (matches files by normalized relative filename, includin
 oceandiff --dir1 baseline_outputs --dir2 candidate_outputs
 ```
 
+Compare directories where files have identical filenames (exact match, no prefix normalization):
+
+```bash
+oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --filename-match
+```
+
 Compare recursively with strict pair checking:
 
 ```bash
@@ -122,7 +128,7 @@ This will skip interpolation and help diagnose grid differences. The CLI will pr
 - Numerical diff and summary statistics are implemented and working.
 - Metadata comparison is implemented and working.
 - The filename is used as a category hint by default, then the comparison variable is resolved from the NetCDF contents. Override with `--var1` / `--var2` if needed.
-- Directory mode is implemented via `--dir1` and `--dir2`; files are compared pairwise by normalized relative path. This supports `dmYYYYMMDD` vs `ddYYYYMMDD` style filename differences while keeping variables (for example TEM/SAL/BED) distinct.
+- Directory mode is implemented via `--dir1` and `--dir2`; files are compared pairwise by normalized relative path. This supports `dmYYYYMMDD` vs `ddYYYYMMDD` style filename differences while keeping variables (for example TEM/SAL/BED) distinct. Use `--filename-match` to skip normalization and pair only files with identical filenames.
 - `--no-interp` flag disables grid interpolation and requires exact grid match for debugging coordinate issues.
 - `--plot` and `--animate` are available. Use `--output-dir` to save generated images/GIFs.
 
@@ -143,6 +149,12 @@ Use directory mode for operational output comparisons:
 
 ```bash
 oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --recursive
+```
+
+If your files share identical filenames across directories, use `--filename-match` for exact pairing:
+
+```bash
+oceandiff --dir1 baseline_outputs --dir2 candidate_outputs --filename-match
 ```
 
 Add `--strict-pairs` in validation gates where missing files should fail the run:
